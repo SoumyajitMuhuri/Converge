@@ -1,6 +1,7 @@
-import { success, z } from "zod";
+import { z } from "zod";
 import { randomBytes } from "node:crypto";
 import Link from "../models/link.js";
+import redisClient from "../config/redis.js";
 
 const createLinkSchema = z.object({
     originalUrl: z.url().trim().max(2048).refine((value) => {
@@ -78,22 +79,77 @@ export const createLink = async (req, res) => {
     }
 };
 
+//redis
+
 export const redirectToOriginalUrl = async (req, res) => {
     try {
-        const link = await Link.findOne({
-            shortCode: req.params.code,
-        });
+        const { code } = req.params;
+        const cacheKey = `link:${code}`;
+        let linkData;
 
-        if (!link) {
-            return res.status(404).send("Short URL not found");
+        // Redis caching
+        if (redisClient.isReady) {
+            try {
+                const cachedLink = await redisClient.get(cacheKey);
+                if (cachedLink) {
+                    linkData = JSON.parse(cachedLink);
+                }
+            } catch (err) {
+                console.error("Redis cache read failed:", err.message);
+            }
         }
 
-        if (link.expiresAt && link.expiresAt <= new Date()) {
-            return res.status(410).send("This short link has expired");
+        if (!linkData) {
+            const linkRecord = await Link.findOne({ shortCode: code });
+
+            if (!linkRecord) {
+                return res.status(404).json({
+                    success: false,
+                    message: "URL not found",
+                });
+            }
+
+            linkData = {
+                originalUrl: linkRecord.originalUrl,
+                expiresAt: linkRecord.expiresAt,
+            };
+
+            const maxCacheTtlSeconds = 24 * 60 * 60;
+            const ttlSeconds = linkData.expiresAt
+                ? Math.min(
+                    maxCacheTtlSeconds,
+                    Math.floor((new Date(linkData.expiresAt).getTime() - Date.now()) / 1000)
+                )
+                : maxCacheTtlSeconds;
+
+            if (redisClient.isReady && ttlSeconds > 0) {
+                try {
+                    await redisClient.set(cacheKey, JSON.stringify(linkData), { EX: ttlSeconds });
+                } catch (err) {
+                    console.error("Redis cache write failed:", err.message);
+                }
+            }
         }
 
-        return res.redirect(302, link.originalUrl);
+        if (linkData.expiresAt && new Date(linkData.expiresAt) <= new Date()) {
+            if (redisClient.isReady) {
+                try {
+                    await redisClient.del(cacheKey);
+                } catch (err) {
+                    console.error("Redis cache delete failed:", err.message);
+                }
+            }
+
+            return res.status(410).json({
+                success: false,
+                message: "Link has expired",
+            });
+        }
+
+        return res.redirect(302, linkData.originalUrl);
+
     }
+
     catch (err) {
         console.error("Redirect error:", err.message);
 
