@@ -188,9 +188,10 @@ export const getLinks = async (req, res) => {
     }
 };
 
+
 export const deleteLink = async (req, res) => {
     try {
-        const link = await Link.findOneAndDelete({
+        const link = await Link.findOne({
             _id: req.params.id,
             user: req.userId,
         });
@@ -202,16 +203,32 @@ export const deleteLink = async (req, res) => {
             });
         }
 
+        // 1. Delete the cached redirect from Redis.
+        await redisClient.del(`link:${link.shortCode}`);
+
+        // 2. Delete the link from MongoDB.
+        await Link.deleteOne({
+            _id: link._id,
+            user: req.userId,
+        });
+
         return res.status(200).json({
             success: true,
             message: "Link deleted successfully",
         });
     } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid link ID",
+            });
+        }
+
         console.error("Delete link error:", error.message);
 
         return res.status(500).json({
             success: false,
-            message: "Internal server error",
+            message: "Failed to delete link",
         });
     }
 };
