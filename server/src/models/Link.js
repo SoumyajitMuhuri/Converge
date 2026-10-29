@@ -16,6 +16,11 @@ const linkSchema = new mongoose.Schema(
             unique: true,
             trim: true,
         },
+        
+        qrCodeUrl:{
+            type: String,
+            default:null,
+        },
 
         user:{
             type: mongoose.Schema.Types.ObjectId,

@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import Link from "../models/Link.js";
 import redisClient from "../config/redis.js";
 import visitQueue from "../queues/visit.queue.js";
+import { generateQr } from "../utils/generateQr.js";
 
 const createLinkSchema = z.object({
     originalUrl: z.url().trim().max(2048).refine((value) => {
@@ -50,14 +51,18 @@ export const createLink = async (req, res) => {
             });
         }
 
+        const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get("host")}`;
+        const shortUrl = `${baseUrl}/${shortCode}`;
+
+        const qrCodeUrl = await generateQr(shortUrl, shortCode);
+
         const link = await Link.create({
             originalUrl,
             shortCode,
             user: req.userId,
             expiresAt: expiresAt ? new Date(expiresAt) : null,
+            qrCodeUrl,
         });
-
-        const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get("host")}`;
 
         return res.status(200).json({
             success: true,
@@ -66,6 +71,7 @@ export const createLink = async (req, res) => {
                 originalUrl: link.originalUrl,
                 shortCode: link.shortCode,
                 shortUrl: `${baseUrl}/${link.shortCode}`,
+                qrCodeUrl: link.qrCodeUrl,
                 expiresAt: link.expiresAt,
                 createdAt: link.createdAt,
             },
@@ -201,6 +207,7 @@ export const getLinks = async (req, res) => {
                 originalUrl: link.originalUrl,
                 shortCode: link.shortCode,
                 shortUrl: `${baseUrl}/${link.shortCode}`,
+                qrCodeUrl: link.qrCodeUrl,
                 expiresAt: link.expiresAt,
                 createdAt: link.createdAt,
             })),
