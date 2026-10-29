@@ -4,8 +4,10 @@ import { protect } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.post("/register", register);
-router.post("/login", login);
+export const createAuthRoutes = ({ loginLimiter, registerLimiter }) => {
+router.post("/register", registerLimiter, register);
+router.post("/login", loginLimiter, login);
 router.get("/me", protect, getMe);
 
-export default router;
+return router
+}
