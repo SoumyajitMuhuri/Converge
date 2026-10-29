@@ -2,6 +2,7 @@ import { z } from "zod";
 import { randomBytes } from "node:crypto";
 import Link from "../models/link.js";
 import redisClient from "../config/redis.js";
+import visitQueue from "../queues/visit.queue.js";
 
 const createLinkSchema = z.object({
     originalUrl: z.url().trim().max(2048).refine((value) => {
@@ -92,7 +93,14 @@ export const redirectToOriginalUrl = async (req, res) => {
             try {
                 const cachedLink = await redisClient.get(cacheKey);
                 if (cachedLink) {
-                    linkData = JSON.parse(cachedLink);
+                    const parsedLink = JSON.parse(cachedLink);
+                    // Older cached records may not contain the Mongo ID needed by
+                    // the visit worker. Treat those as cache misses and refresh.
+                    if (parsedLink.linkId) {
+                        linkData = parsedLink;
+                    } else {
+                        await redisClient.del(cacheKey);
+                    }
                 }
             } catch (err) {
                 console.error("Redis cache read failed:", err.message);
@@ -110,6 +118,7 @@ export const redirectToOriginalUrl = async (req, res) => {
             }
 
             linkData = {
+                linkId: linkRecord._id.toString(),
                 originalUrl: linkRecord.originalUrl,
                 expiresAt: linkRecord.expiresAt,
             };
@@ -145,6 +154,18 @@ export const redirectToOriginalUrl = async (req, res) => {
                 message: "Link has expired",
             });
         }
+
+        visitQueue.add("record-visit",{
+            linkId: linkData.linkId,
+            visitedAt: new Date().toISOString(),
+        },
+        {
+            removeOnComplete: 1000,
+            removeOnFail: 500,
+        }
+    ).catch((error) => {
+        console.error("Failed to queue visit:", error.message);
+    });
 
         return res.redirect(302, linkData.originalUrl);
 
