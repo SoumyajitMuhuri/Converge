@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { randomBytes } from "node:crypto";
-import Link from "../models/link.js";
+import Link from "../models/Link.js";
 import redisClient from "../config/redis.js";
 import visitQueue from "../queues/visit.queue.js";
 
@@ -71,6 +71,13 @@ export const createLink = async (req, res) => {
             },
         });
     } catch (err) {
+
+        if (err.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "This alias is already taken",
+            });
+        }
         console.error("Link creation error", err.message);
 
         return res.status(500).json({
@@ -155,17 +162,17 @@ export const redirectToOriginalUrl = async (req, res) => {
             });
         }
 
-        visitQueue.add("record-visit",{
+        visitQueue.add("record-visit", {
             linkId: linkData.linkId,
             visitedAt: new Date().toISOString(),
         },
-        {
-            removeOnComplete: 1000,
-            removeOnFail: 500,
-        }
-    ).catch((error) => {
-        console.error("Failed to queue visit:", error.message);
-    });
+            {
+                removeOnComplete: 1000,
+                removeOnFail: 500,
+            }
+        ).catch((error) => {
+            console.error("Failed to queue visit:", error.message);
+        });
 
         return res.redirect(302, linkData.originalUrl);
 
@@ -225,8 +232,9 @@ export const deleteLink = async (req, res) => {
         }
 
         // 1. Delete the cached redirect from Redis.
-        await redisClient.del(`link:${link.shortCode}`);
-
+        if (redisClient.isReady) {
+            await redisClient.del(`link:${link.shortCode}`);
+        }
         // 2. Delete the link from MongoDB.
         await Link.deleteOne({
             _id: link._id,

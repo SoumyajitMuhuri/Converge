@@ -4,6 +4,7 @@ import { createAuthRoutes } from "./routes/auth.routes.js";
 import { createLinkRoutes } from "./routes/link.routes.js";
 import { redirectToOriginalUrl } from "./controllers/link.controller.js";
 import { createRateLimiters } from "./middleware/rateLimit.middleware.js";
+import analyticsRoutes from "./routes/analytics.routes.js"
 
 export const createApp = () => {
 
@@ -25,6 +26,7 @@ export const createApp = () => {
 
     app.use("/api/auth", createAuthRoutes({ loginLimiter, registerLimiter }));
     app.use("/api/links", createLinkRoutes({ createLinkLimiter }));
+    app.use("/api/analytics", analyticsRoutes);
     app.get("/:code", redirectToOriginalUrl);
 
     return app;
