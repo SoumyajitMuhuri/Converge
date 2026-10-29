@@ -70,3 +70,67 @@ export const getLinkAnalytics = async (req, res) => {
     });
   }
 };
+
+export const getDashboardAnalytics = async (req, res) => {
+  try {
+    const links = await Link.find({ user: req.userId }).select(
+      "_id originalUrl shortCode createdAt qrCodeUrl"
+    ).lean();
+
+    const linkIds = links.map((link) => link._id);
+
+    const [totalVisits, popularLinks] = await Promise.all([
+      Visit.countDocuments({ link: { $in: linkIds } }),
+
+      Visit.aggregate([
+        {
+          $match: { link: { $in: linkIds } }
+        }, {
+          $group: {
+            _id: "$link",
+            visits: { $sum: 1 },
+          },
+        }, {
+          $sort: { visits: -1 }
+        }, {
+          $limit: 5
+        },
+      ]),
+    ]);
+
+    const visitCounts = new Map(
+      popularLinks.map((item) => [item._id.toString(), item.visits])
+    );
+
+    const topLinks = popularLinks.map((item) => {
+      const link = links.find(
+        (entry) => entry._id.toString() === item._id.toString()
+      );
+
+
+      return {
+        id: item._id,
+        originalUrl: link?.originalUrl,
+        shortCode: link?.shortCode,
+        qrCodeUrl: link?.qrCodeUrl ?? null,
+        visits: visitCounts.get(item._id.toString())??0,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      analytics: {
+        totalLinks: links.length,
+        totalVisits,
+        topLinks,
+      },
+    });
+  } catch (error) {
+    console.error("Dashboard Analytics error:",error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve dashboard analytics",
+    });
+  }
+};
