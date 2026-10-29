@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { email, lowercase, maxLength } from "zod";
 
 const userSchema = new mongoose.Schema(
     {
