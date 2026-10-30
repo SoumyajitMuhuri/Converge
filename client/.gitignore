@@ -31,3 +31,5 @@ coverage/
 # Local tooling caches
 .eslintcache
 .vite/
+
+.DS_Store
