@@ -78,8 +78,14 @@ export const getDashboardAnalytics = async (req, res) => {
     ).lean();
 
     const linkIds = links.map((link) => link._id);
+    const now = new Date();
+    const today = new Date(now);
+    today.setUTCHours(0, 0, 0, 0);
 
-    const [totalVisits, popularLinks] = await Promise.all([
+    const windowStart = new Date(today);
+    windowStart.setUTCDate(windowStart.getUTCDate() - 29);
+
+    const [totalVisits, popularLinks, dailyVisitCounts] = await Promise.all([
       Visit.countDocuments({ link: { $in: linkIds } }),
 
       Visit.aggregate([
@@ -96,7 +102,49 @@ export const getDashboardAnalytics = async (req, res) => {
           $limit: 5
         },
       ]),
+
+      Visit.aggregate([
+        {
+          $match: {
+            link: { $in: linkIds },
+            visitedAt: { $gte: windowStart, $lte: now },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$visitedAt",
+                timezone: "UTC",
+              },
+            },
+            visits: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        {
+          $project: {
+            _id: 0,
+            date: "$_id",
+            visits: 1,
+          },
+        },
+      ]),
     ]);
+
+    const visitsByDate = new Map(
+      dailyVisitCounts.map(({ date, visits }) => [date, visits]),
+    );
+    const visitsOverTime = [];
+
+    for (const date = new Date(windowStart); date <= today; date.setUTCDate(date.getUTCDate() + 1)) {
+      const dateKey = date.toISOString().slice(0, 10);
+      visitsOverTime.push({
+        date: dateKey,
+        visits: visitsByDate.get(dateKey) ?? 0,
+      });
+    }
 
     const visitCounts = new Map(
       popularLinks.map((item) => [item._id.toString(), item.visits])
@@ -123,6 +171,7 @@ export const getDashboardAnalytics = async (req, res) => {
         totalLinks: links.length,
         totalVisits,
         topLinks,
+        visitsOverTime,
       },
     });
   } catch (error) {

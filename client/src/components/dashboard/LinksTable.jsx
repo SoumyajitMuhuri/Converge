@@ -1,10 +1,8 @@
 import { useState } from "react";
 import {
-  ArrowUpRight,
   Copy,
   ExternalLink,
   Link2,
-  MoreHorizontal,
   QrCode,
   Trash2,
 } from "lucide-react";
@@ -19,7 +17,7 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
 
     try {
       await navigator.clipboard.writeText(shortUrl);
-      setCopiedId(link.id);
+      setCopiedId(link.id || link._id || link.shortCode);
 
       setTimeout(() => {
         setCopiedId(null);
@@ -44,59 +42,49 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
   };
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-100/60">
-      {/* Table heading */}
-      <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <section className="theme-surface overflow-hidden">
+      <div className="theme-divider flex flex-col gap-1 border-b px-5 py-5 sm:px-6">
         <div>
-          <h2 className="text-base font-bold text-slate-900">Your links</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Manage and track your shortened URLs.
+          <h2 className="theme-ink text-base font-semibold">Your links</h2>
+          <p className="theme-ink-secondary mt-1 text-sm">
+            Your shortened URLs and their activity.
           </p>
         </div>
-
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-2 self-start rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-        >
-          View all
-          <ArrowUpRight size={14} />
-        </button>
       </div>
 
-      {/* Responsive table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse text-left">
+        <table className="w-full min-w-[650px] border-collapse text-left">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/70">
-              <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <tr className="theme-table-head theme-divider border-b">
+              <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider sm:px-6">
                 Link
               </th>
-              <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider">
                 Visits
               </th>
-              <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider">
                 Created
               </th>
-              <th className="px-5 py-3.5 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="theme-table-body">
             {links.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-6 py-14 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                    <Link2 size={22} />
+                  <div className="theme-auth-mark mx-auto">
+                    <Link2 size={20} />
                   </div>
 
-                  <p className="mt-3 text-sm font-semibold text-slate-700">
+                  <p className="theme-ink mt-4 text-sm font-semibold">
                     No links yet
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-400">
-                    Shorten your first URL to see it here.
+                  <p className="theme-ink-secondary mt-1 text-sm">
+                    Your shortened links will appear here.
                   </p>
                 </td>
               </tr>
@@ -109,12 +97,11 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
                 return (
                   <tr
                     key={link.id || link._id || link.shortCode}
-                    className="transition hover:bg-slate-50/70"
+                    className="theme-table-row transition-colors"
                   >
-                    {/* Link details */}
-                    <td className="max-w-[360px] px-6 py-4">
+                    <td className="max-w-[360px] px-5 py-4 sm:px-6">
                       <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                        <div className="theme-link-mark mt-0.5">
                           <Link2 size={17} />
                         </div>
 
@@ -123,20 +110,17 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
                             href={shortUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex max-w-full items-center gap-1.5 text-sm font-semibold text-violet-700 hover:text-violet-900"
+                            className="theme-link inline-flex max-w-full items-center gap-1.5 text-sm font-semibold"
                           >
                             <span className="truncate">
                               {link.shortCode || "Short link"}
                             </span>
-                            <ExternalLink
-                              size={12}
-                              className="shrink-0 text-slate-400"
-                            />
+                            <ExternalLink size={12} className="theme-ink-muted shrink-0" />
                           </a>
 
                           <p
                             title={link.originalUrl}
-                            className="mt-1 max-w-[280px] truncate text-xs text-slate-400"
+                            className="theme-ink-muted mt-1 max-w-[280px] truncate text-xs"
                           >
                             {link.originalUrl}
                           </p>
@@ -144,26 +128,16 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
                       </div>
                     </td>
 
-                    {/* Visit count */}
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-800">
-                          {(link.visits ?? link.clicks ?? 0).toLocaleString(
-                            "en-IN",
-                          )}
-                        </span>
-                        <span className="hidden rounded-md bg-emerald-50 px-1.5 py-1 text-[10px] font-semibold text-emerald-700 xl:inline">
-                          <ArrowUpRight size={11} className="inline" /> Visits
-                        </span>
-                      </div>
+                      <span className="theme-ink text-sm font-medium tabular-nums">
+                        {(link.visits ?? link.clicks ?? 0).toLocaleString("en-IN")}
+                      </span>
                     </td>
 
-                    {/* Creation date */}
-                    <td className="px-5 py-4 text-xs font-medium text-slate-500">
+                    <td className="theme-ink-secondary px-5 py-4 text-sm">
                       {formatDate(link.createdAt)}
                     </td>
 
-                    {/* Actions */}
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-1">
                         <button
@@ -171,13 +145,11 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
                           onClick={() => handleCopy(link)}
                           title="Copy short URL"
                           aria-label="Copy short URL"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-violet-50 hover:text-violet-700"
+                          className="theme-icon-button"
                         >
-                          {copiedId === link.id ? (
-                            <span className="text-[10px] font-bold">OK</span>
-                          ) : (
-                            <Copy size={15} />
-                          )}
+                          {copiedId === (link.id || link._id || link.shortCode)
+                            ? <span className="text-[10px] font-bold">OK</span>
+                            : <Copy size={15} />}
                         </button>
 
                         <button
@@ -185,7 +157,7 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
                           onClick={() => onShowQr?.(link)}
                           title="Show QR code"
                           aria-label="Show QR code"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-violet-50 hover:text-violet-700"
+                          className="theme-icon-button"
                         >
                           <QrCode size={16} />
                         </button>
@@ -195,18 +167,9 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
                           onClick={() => onDelete?.(link)}
                           title="Delete link"
                           aria-label="Delete link"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                          className="theme-icon-button theme-icon-button-danger"
                         >
                           <Trash2 size={15} />
-                        </button>
-
-                        <button
-                          type="button"
-                          title="More options"
-                          aria-label="More options"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                        >
-                          <MoreHorizontal size={16} />
                         </button>
                       </div>
                     </td>
@@ -220,16 +183,10 @@ function LinksTable({ links = [], onDelete, onShowQr }) {
 
       {/* Table footer */}
       {links.length > 0 && (
-        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
-          <p className="text-xs text-slate-400">
-            Showing{" "}
-            <span className="font-semibold text-slate-600">{links.length}</span>{" "}
-            {links.length === 1 ? "link" : "links"}
+        <div className="theme-divider flex items-center border-t px-5 py-3.5 sm:px-6">
+          <p className="theme-ink-muted text-xs">
+            {links.length} {links.length === 1 ? "link" : "links"}
           </p>
-
-          <span className="text-xs font-medium text-slate-400">
-            Latest links
-          </span>
         </div>
       )}
     </section>

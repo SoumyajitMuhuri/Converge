@@ -1,26 +1,25 @@
-import { useState } from "react";
-import Sidebar from "./Sidebar";
 import Header from "./Header";
 
-function DashboardLayout({ children }) {
-  const [activePage, setActivePage] = useState("Overview");
-
+function DashboardLayout({ children, onLogout, theme, onToggleTheme, userName }) {
   return (
-    <div className="min-h-screen bg-[#f8f9fc]">
-      {/* Sidebar */}
-      <Sidebar
-        activePage={activePage}
-        onNavigate={setActivePage}
+    <div className="theme-page min-h-screen">
+      <Header
+        onLogout={onLogout}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
       />
 
-      {/* Main content area */}
-      <div className="min-h-screen lg:pl-64">
-        <Header activePage={activePage} />
-
-        <main className="mx-auto w-full max-w-[1600px] p-5 sm:p-8">
-          {children}
-        </main>
+      <div className="theme-divider border-b bg-[var(--surface-muted)]">
+        <div className="mx-auto w-full max-w-6xl px-4 py-3 sm:px-7">
+          <p className="theme-ink text-sm">
+            Welcome <span className="font-semibold">{userName || "…"}</span>
+          </p>
+        </div>
       </div>
+
+      <main className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-7 sm:py-10">
+        {children}
+      </main>
     </div>
   );
 }

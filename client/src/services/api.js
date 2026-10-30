@@ -41,6 +41,38 @@ async function request(endpoint, options = {}) {
   return data;
 }
 
+async function requestBlob(endpoint) {
+  const token = getToken();
+  let response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  } catch {
+    throw new Error(
+      "Unable to connect to the server. Check that the server is active.",
+    );
+  }
+
+  if (!response.ok) {
+    const contentType = response.headers.get("content-type") || "";
+    const data = contentType.includes("application/json")
+      ? await response.json()
+      : null;
+
+    if (response.status === 401) {
+      throw new Error("Your session may have expired. Please log-in again");
+    }
+
+    throw new Error(
+      data?.message || `Request failed with status ${response.status}.`,
+    );
+  }
+
+  return response.blob();
+}
+
 export const api = {
 register(credentials){
   return request("/api/auth/register",{
@@ -54,6 +86,10 @@ login(credentials){
     method: "POST",
     body: JSON.stringify(credentials),
   });
+},
+
+getMe(){
+  return request("/api/auth/me");
 },
 
 getLinks(){
@@ -79,5 +115,9 @@ getDashboardAnalytics(){
 
 getLinkAnalytics(id){
   return request(`/api/analytics/${encodeURIComponent(id)}`);
+},
+
+downloadQr(id){
+  return requestBlob(`/api/links/${encodeURIComponent(id)}/qr/download`);
 },
 };

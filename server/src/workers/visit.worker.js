@@ -2,43 +2,75 @@ import "dotenv/config";
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
 import mongoose from "mongoose";
+import { createClient } from "redis";
 import { connectDB } from "../config/db.js";
 import Visit from "../models/Visit.js";
+import Link from "../models/Link.js";
 
-const connection = new IORedis(process.env.REDIS_URI,{
+const connection = new IORedis(process.env.REDIS_URI, {
     maxRetriesPerRequest: null,
+});
+
+const eventPublisher = createClient({
+    url: process.env.REDIS_URI,
+});
+
+eventPublisher.on("error", (error) => {
+    console.error("Visit event publisher error:", error.message);
 });
 
 const startWorker = async () => {
     await connectDB();
+    await eventPublisher.connect();
 
-    const worker = new Worker("visit-events", async (job) =>{
-        const { linkId, visitedAt } = job.data;
+    const worker = new Worker(
+        "visit-events",
+        async (job) => {
+            const { linkId, visitedAt } = job.data;
 
-        await Visit.create({
-            link: new mongoose.Types.ObjectId(linkId),
-            visitedAt: new Date(visitedAt),
-        });
+            // 1. Save the visit to MongoDB.
+            const visit = await Visit.create({
+                link: new mongoose.Types.ObjectId(linkId),
+                visitedAt: new Date(visitedAt),
+            });
 
-        console.log(`Processed visit for link ${linkId}`);
-    },{
-        connection,
-        concurrency: 10,
-    }
+            // 2. Find the owner of the shortened link.
+            const link = await Link.findById(linkId)
+                .select("user")
+                .lean();
+
+            // 3. Notify the Express server through Redis Pub/Sub.
+            if (link) {
+                await eventPublisher.publish(
+                    "converge:visit-recorded",
+                    JSON.stringify({
+                        userId: link.user.toString(),
+                        linkId: linkId.toString(),
+                        visitedAt: visit.visitedAt.toISOString(),
+                    }),
+                );
+            }
+
+            console.log(`Processed visit for link ${linkId}`);
+        },
+        {
+            connection,
+            concurrency: 10,
+        },
     );
 
     worker.on("completed", (job) => {
         console.log(`Visit job ${job.id} completed`);
-    })
+    });
 
-    worker.on("failed", (job,error) => {
-        console.error(`Visit job ${job?.id} failed:`,error.message);
+    worker.on("failed", (job, error) => {
+        console.error(`Visit job ${job?.id} failed:`, error.message);
     });
 
     console.log("Converge visit worker is running");
 };
 
-startWorker().catch((error)=>{
-    console.error("Failed to start visit worker:",error.message);
+startWorker().catch((error) => {
+    console.error("Failed to start visit worker:", error.message);
     process.exit(1);
 });

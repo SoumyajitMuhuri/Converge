@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { randomBytes } from "node:crypto";
+import mongoose from "mongoose";
 import Link from "../models/Link.js";
 import redisClient from "../config/redis.js";
 import visitQueue from "../queues/visit.queue.js";
@@ -239,6 +240,72 @@ export const getLinks = async (req, res) => {
       message: "Internal server error",
     });
   }
+};
+
+export const downloadQrCode = async (req, res) => {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid link ID",
+        });
+    }
+
+    try {
+        const link = await Link.findOne({
+            _id: id,
+            user: req.userId,
+        }).select("qrCodeUrl shortCode");
+
+        if (!link?.qrCodeUrl) {
+            return res.status(404).json({
+                success: false,
+                message: "QR code not found",
+            });
+        }
+
+        const imageUrl = new URL(link.qrCodeUrl);
+        if (imageUrl.protocol !== "https:") {
+            return res.status(502).json({
+                success: false,
+                message: "QR code image is unavailable",
+            });
+        }
+
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+            return res.status(502).json({
+                success: false,
+                message: "Unable to retrieve the QR code image",
+            });
+        }
+
+        const contentType = imageResponse.headers.get("content-type") || "";
+        if (!contentType.startsWith("image/")) {
+            return res.status(502).json({
+                success: false,
+                message: "The QR code URL did not return an image",
+            });
+        }
+
+        const image = Buffer.from(await imageResponse.arrayBuffer());
+        const safeShortCode = link.shortCode.replace(/[^a-zA-Z0-9_-]/g, "") || "qr-code";
+
+        res.set({
+            "Content-Type": contentType,
+            "Content-Disposition": `attachment; filename="converge-${safeShortCode}.png"`,
+            "Cache-Control": "private, no-store",
+        });
+
+        return res.status(200).send(image);
+    } catch (error) {
+        console.error("QR code download error:", error.message);
+        return res.status(502).json({
+            success: false,
+            message: "Unable to download the QR code",
+        });
+    }
 };
 
 

@@ -1,13 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../services/api";
+import { useDashboardEvents } from "./useDashboardEvents";
 
 function useDashboard() {
   const [links, setLinks] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [user, setUser] = useState(null);
+  const [qrLink, setQrLink] = useState(null);
   const [loading, setLoading] = useState(true);
   const [shortening, setShortening] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const result = await api.getMe();
+      const currentUser = result?.user || result?.data?.user || result;
+      setUser(currentUser?.name ? currentUser : null);
+    } catch {
+      setUser(null);
+    }
+  }, []);
 
   const refreshAnalytics = useCallback(async () => {
     const result = await api.getDashboardAnalytics();
@@ -66,15 +79,22 @@ function useDashboard() {
     }
   }, []);
 
+  // Fetch dashboard data when the dashboard first loads.
   useEffect(() => {
-  fetchDashboard();
-
-  const intervalId = setInterval(() => {
     fetchDashboard();
-  }, 10000);
+  }, [fetchDashboard]);
 
-  return () => clearInterval(intervalId);
-}, [fetchDashboard]);
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  // Refresh dashboard data whenever a new visit is recorded.
+  const handleVisitRecorded = useCallback(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  // Listen for real-time visit events from the server.
+  useDashboardEvents(handleVisitRecorded);
 
   const handleShorten = async (originalUrl) => {
     setShortening(true);
@@ -161,11 +181,13 @@ function useDashboard() {
 
   const handleShowQr = (link) => {
     if (link.qrCodeUrl) {
-      window.open(link.qrCodeUrl, "_blank", "noopener,noreferrer");
+      setQrLink(link);
     } else {
       setError("A QR code is not available for this link.");
     }
   };
+
+  const closeQr = useCallback(() => setQrLink(null), []);
 
   const dismissError = () => setError("");
   const dismissSuccess = () => setSuccessMessage("");
@@ -173,6 +195,8 @@ function useDashboard() {
   return {
     links,
     analytics,
+    user,
+    qrLink,
     loading,
     shortening,
     error,
@@ -180,6 +204,7 @@ function useDashboard() {
     handleShorten,
     handleDelete,
     handleShowQr,
+    closeQr,
     fetchDashboard,
     dismissError,
     dismissSuccess,
