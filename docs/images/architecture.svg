@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="550" viewBox="0 0 1100 550" role="img" aria-labelledby="title desc">
+  <title id="title">Converge system architecture</title>
+  <desc id="desc">The React client communicates with the Express API. The API reads and writes MongoDB, queues visit jobs in Redis, and uploads QR codes to ImageKit. A worker records visits and publishes realtime events through Redis to the API and client.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0 0L9 4.5L0 9Z" fill="#6A7062" />
+    </marker>
+    <marker id="arrow-start" markerWidth="9" markerHeight="9" refX="2" refY="4.5" orient="auto">
+      <path d="M9 0L0 4.5L9 9Z" fill="#6A7062" />
+    </marker>
+    <style>
+      .title { font: 600 25px Inter, ui-sans-serif, system-ui, sans-serif; fill: #F1F3EF; }
+      .label { font: 600 17px Inter, ui-sans-serif, system-ui, sans-serif; fill: #F1F3EF; }
+      .copy { font: 14px Inter, ui-sans-serif, system-ui, sans-serif; fill: #D0D5CC; }
+      .tag { font: 12px Inter, ui-sans-serif, system-ui, sans-serif; fill: #D0D5CC; }
+      .card { fill: #101611; stroke: #6A7062; stroke-width: 1.5; }
+      .accent-card { fill: #3A5A40; stroke: #6A7062; stroke-width: 1.5; }
+      .line { fill: none; stroke: #6A7062; stroke-width: 2; marker-end: url(#arrow); }
+      .duplex { fill: none; stroke: #6A7062; stroke-width: 2; marker-start: url(#arrow-start); marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1100" height="550" rx="22" fill="#04030F" />
+  <text x="40" y="52" class="title">How Converge fits together</text>
+  <text x="40" y="78" class="copy">Client requests, background visit processing, and live dashboard updates</text>
+
+  <rect x="40" y="125" width="245" height="175" rx="14" class="card" />
+  <text x="64" y="162" class="label">Web client</text>
+  <text x="64" y="192" class="copy">React · Vite · Tailwind CSS</text>
+  <text x="64" y="220" class="copy">Sign in and manage links</text>
+  <text x="64" y="248" class="copy">Charts · QR modal · themes</text>
+  <text x="64" y="276" class="copy">Receives dashboard events</text>
+
+  <rect x="375" y="125" width="300" height="175" rx="14" class="accent-card" />
+  <text x="400" y="162" class="label">Express API</text>
+  <text x="400" y="192" class="copy">JWT authentication and REST routes</text>
+  <text x="400" y="220" class="copy">Creates redirects and QR assets</text>
+  <text x="400" y="248" class="copy">Dashboard analytics · SSE stream</text>
+  <text x="400" y="276" class="copy">Validates ownership of link actions</text>
+
+  <rect x="800" y="95" width="260" height="135" rx="14" class="card" />
+  <text x="824" y="132" class="label">MongoDB</text>
+  <text x="824" y="162" class="copy">Users · links · visits</text>
+  <text x="824" y="190" class="copy">Daily analytics aggregation</text>
+
+  <rect x="800" y="275" width="260" height="135" rx="14" class="card" />
+  <text x="824" y="312" class="label">Redis</text>
+  <text x="824" y="342" class="copy">BullMQ visit queue</text>
+  <text x="824" y="370" class="copy">Pub/Sub for visit events</text>
+
+  <rect x="375" y="390" width="300" height="120" rx="14" class="card" />
+  <text x="400" y="428" class="label">Visit worker</text>
+  <text x="400" y="458" class="copy">Stores visits in MongoDB</text>
+  <text x="400" y="486" class="copy">Publishes events through Redis</text>
+
+  <rect x="40" y="390" width="245" height="120" rx="14" class="card" />
+  <text x="64" y="428" class="label">ImageKit</text>
+  <text x="64" y="458" class="copy">Hosts generated QR images</text>
+  <text x="64" y="486" class="copy">Authenticated download proxy</text>
+
+  <path d="M285 212H375" class="duplex" />
+  <text x="302" y="196" class="tag">REST + SSE</text>
+
+  <path d="M675 163L800 145" class="line" />
+  <text x="704" y="139" class="tag">read / write</text>
+
+  <path d="M675 263L800 322" class="line" />
+  <text x="708" y="276" class="tag">enqueue visit</text>
+
+  <path d="M800 377L675 445" class="duplex" />
+  <text x="697" y="418" class="tag">jobs + events</text>
+
+  <path d="M675 414L800 213" class="line" />
+  <text x="704" y="349" class="tag">record visit</text>
+
+  <path d="M375 277L285 418" class="line" />
+  <text x="290" y="330" class="tag">upload / serve QR</text>
+</svg>
