@@ -4,6 +4,7 @@ import Link from "../models/Link.js";
 import redisClient from "../config/redis.js";
 import visitQueue from "../queues/visit.queue.js";
 import { generateQr } from "../utils/generateQr.js";
+import Visit from "../models/Visit.js";
 
 const createLinkSchema = z.object({
     originalUrl: z.url().trim().max(2048).refine((value) => {
@@ -192,35 +193,52 @@ export const redirectToOriginalUrl = async (req, res) => {
 };
 
 export const getLinks = async (req, res) => {
-    try {
-        const links = await Link.find({
-            user: req.userId
-        }).sort({ createdAt: -1 });
+  try {
+    const links = await Link.find({ user: req.userId })
+      .sort({ createdAt: -1 })
+      .lean();
 
-        const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get("host")}`;
+    const linkIds = links.map((link) => link._id);
 
-        return res.status(200).json({
-            success: true,
-            count: links.length,
-            links: links.map((link) => ({
-                id: link._id,
-                originalUrl: link.originalUrl,
-                shortCode: link.shortCode,
-                shortUrl: `${baseUrl}/${link.shortCode}`,
-                qrCodeUrl: link.qrCodeUrl,
-                expiresAt: link.expiresAt,
-                createdAt: link.createdAt,
-            })),
-        });
-    } catch (error) {
+    const visitCounts = await Visit.aggregate([
+      { $match: { link: { $in: linkIds } } },
+      {
+        $group: {
+          _id: "$link",
+          visits: { $sum: 1 },
+        },
+      },
+    ]);
 
-        console.error("Get links error:", error.message);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error",
-        });
+    const visitCountMap = new Map(
+      visitCounts.map((item) => [item._id.toString(), item.visits]),
+    );
 
-    }
+    const baseUrl =
+      process.env.API_BASE_URL || `${req.protocol}://${req.get("host")}`;
+
+    return res.status(200).json({
+      success: true,
+      count: links.length,
+      links: links.map((link) => ({
+        id: link._id,
+        originalUrl: link.originalUrl,
+        shortCode: link.shortCode,
+        shortUrl: `${baseUrl}/${link.shortCode}`,
+        qrCodeUrl: link.qrCodeUrl,
+        expiresAt: link.expiresAt,
+        createdAt: link.createdAt,
+        visits: visitCountMap.get(link._id.toString()) ?? 0,
+      })),
+    });
+  } catch (error) {
+    console.error("Get links error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };
 
 
