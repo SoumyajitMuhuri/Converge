@@ -6,6 +6,7 @@ import redisPublisher from "./src/config/redisPublisher.js";
 import redisSubscriber from "./src/config/redisSubscriber.js";
 import { subscribeToVisitEvents } from "./src/utils/subscribeToVisitEvents.js";
 import job from "./src/workers/cron.js";
+import { startVisitWorker } from "./src/workers/visit.worker.js";
 
 
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,7 @@ const startServer = async () => {
         await redisSubscriber.connect();
 
         await subscribeToVisitEvents();
+        await startVisitWorker();
 
         const app = createApp();
 

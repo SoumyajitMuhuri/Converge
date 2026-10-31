@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { pathToFileURL } from "node:url";
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
 import mongoose from "mongoose";
@@ -19,9 +20,13 @@ eventPublisher.on("error", (error) => {
     console.error("Visit event publisher error:", error.message);
 });
 
-const startWorker = async () => {
-    await connectDB();
-    await eventPublisher.connect();
+export const startVisitWorker = async () => {
+    if (mongoose.connection.readyState !== 1) {
+        await connectDB();
+    }
+    if (!eventPublisher.isOpen) {
+        await eventPublisher.connect();
+    }
 
     const worker = new Worker(
         "visit-events",
@@ -66,11 +71,17 @@ const startWorker = async () => {
     worker.on("failed", (job, error) => {
         console.error(`Visit job ${job?.id} failed:`, error.message);
     });
+    worker.on("error", (error) => {
+        console.error("Visit worker error:", error.message);
+    });
 
     console.log("Converge visit worker is running");
+    return worker;
 };
 
-startWorker().catch((error) => {
-    console.error("Failed to start visit worker:", error.message);
-    process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+    startVisitWorker().catch((error) => {
+        console.error("Failed to start visit worker:", error.message);
+        process.exit(1);
+    });
+}

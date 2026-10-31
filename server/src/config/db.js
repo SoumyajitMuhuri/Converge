@@ -2,8 +2,11 @@ import mongoose from "mongoose";
 
 export const connectDB = async () => {
     try{
-        await mongoose.connect(process.env.MONGODB_URI);
-        console.log(`MongoDB connected: ${mongoose.connection.host}`);
+        const databaseName = process.env.MONGODB_DB || "converge";
+        await mongoose.connect(process.env.MONGODB_URI, {
+            dbName: databaseName,
+        });
+        console.log(`MongoDB connected to database: ${mongoose.connection.name}`);
     }
     catch(err){
         console.error("MongoDB connection error:",err.message);

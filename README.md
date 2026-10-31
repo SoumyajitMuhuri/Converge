@@ -96,6 +96,7 @@ Vite prints the client URL (usually `http://localhost:5173`). The API defaults t
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `MONGODB_URI` | Yes | MongoDB connection string. |
+| `MONGODB_DB` | No | MongoDB database name; defaults to `converge`. |
 | `REDIS_URI` | Yes | Redis connection string used by the API, worker, queue, and Pub/Sub. |
 | `JWT_SECRET` | Yes | Secret used to sign and verify authentication tokens. Use a long, random value. |
 | `IMAGEKIT_PRIVATE_KEY` | Yes | Private ImageKit key used to upload QR images. Keep it server-side. |
