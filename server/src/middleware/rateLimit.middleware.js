@@ -25,7 +25,7 @@ export const createRateLimiters = () => {
     //Max 10 registration attempts in 1hr from same IP
 
     const registerLimiter = rateLimit({
-        windowMs: 5 * 60 * 1000,
+        windowMs: 60 * 60 * 1000,
         limit: 10,
         standardHeaders: "draft-8",
         legacyHeaders: false,
