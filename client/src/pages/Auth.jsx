@@ -21,22 +21,13 @@ function Auth({ onLogin, theme, onToggleTheme }) {
           <div className="theme-auth-mark mb-7" aria-hidden="true">
             <img src="/icon.png" alt="" className="h-full w-full rounded-[9px] object-contain" />
           </div>
-          <p className="theme-accent-text text-xs font-semibold uppercase tracking-[0.16em]">
-            Link management, made clear
-          </p>
           <h1 className="theme-ink mt-4 text-4xl font-semibold leading-tight tracking-[-0.035em] sm:text-5xl">
             Make every link easier to share.
           </h1>
           <p className="theme-ink-secondary mt-5 max-w-md text-base leading-7">
-            Create concise links, keep them organized, and see how people use
+            Create concise links and QR codes, keep them organized, and see how people use
             them from one focused workspace.
           </p>
-          <div className="theme-divider mt-8 flex items-center gap-3 border-t pt-5">
-            <span className="theme-ink text-sm font-semibold">
-              converge<span className="theme-accent-text">.</span>
-            </span>
-            <span className="theme-ink-muted text-sm">Simple links. Useful insight.</span>
-          </div>
         </section>
 
         <section className="theme-surface w-full p-6 sm:p-8">
