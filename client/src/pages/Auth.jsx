@@ -1,5 +1,4 @@
 import useAuth from "../hooks/useAuth";
-import { Link2 } from "lucide-react";
 import ThemeToggle from "../components/ui/ThemeToggle";
 
 function Auth({ onLogin, theme, onToggleTheme }) {
@@ -7,14 +6,20 @@ function Auth({ onLogin, theme, onToggleTheme }) {
 
   return (
     <main className="theme-page min-h-screen px-4 py-5 sm:px-8 sm:py-8">
-      <div className="mx-auto flex w-full max-w-6xl justify-end">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img src="/icon.png" alt="" aria-hidden="true" className="h-9 w-12 object-contain" />
+          <span className="theme-ink text-lg font-semibold tracking-tight">
+            converge<span className="theme-accent-text">.</span>
+          </span>
+        </div>
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </div>
 
       <div className="mx-auto grid w-full max-w-5xl items-center gap-10 py-8 sm:py-12 lg:grid-cols-[1fr_0.92fr] lg:gap-20 lg:py-16">
         <section className="max-w-lg">
           <div className="theme-auth-mark mb-7" aria-hidden="true">
-            <Link2 size={21} strokeWidth={2} />
+            <img src="/icon.png" alt="" className="h-full w-full rounded-[9px] object-contain" />
           </div>
           <p className="theme-accent-text text-xs font-semibold uppercase tracking-[0.16em]">
             Link management, made clear
