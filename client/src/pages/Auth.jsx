@@ -22,7 +22,7 @@ function Auth({ onLogin, theme, onToggleTheme }) {
             <img src="/icon.png" alt="" className="h-full w-full rounded-[9px] object-contain" />
           </div>
           <h1 className="theme-ink mt-4 text-4xl font-semibold leading-tight tracking-[-0.035em] sm:text-5xl">
-            Make every link easier to share.
+            Make every link easier to share and track.
           </h1>
           <p className="theme-ink-secondary mt-5 max-w-md text-base leading-7">
             Create concise links and QR codes, keep them organized, and see how people use
