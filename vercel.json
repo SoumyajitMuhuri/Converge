@@ -3,9 +3,9 @@
   "buildCommand": "npm install",
   "installCommand": "npm install",
   "framework": null,
-  "outputDirectory": "server",
+  "rootDirectory": "server",
   "functions": {
-    "server/server.js": {
+    "server.js": {
       "maxDuration": 30
     }
   },
