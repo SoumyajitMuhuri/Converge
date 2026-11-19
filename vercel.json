@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm run vercel-build",
-  "installCommand": "npm install",
+  "buildCommand": "cd server && npm install",
+  "installCommand": "cd server && npm install",
   "framework": null,
   "functions": {
     "server/server.js": {
@@ -12,11 +12,6 @@
     {
       "src": "/api/(.*)",
       "dest": "server/server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "client/dist/$1"
     }
-  ],
-  "outputDirectory": "client/dist"
+  ]
 }

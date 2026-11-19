@@ -18,8 +18,7 @@
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "build:client": "cd client && npm run build",
-    "vercel-build": "cd server && npm run vercel-build && cd ../client && npm run build"
+    "build:client": "cd client && npm run build"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
