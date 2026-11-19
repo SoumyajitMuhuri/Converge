@@ -1,18 +1,18 @@
 {
   "version": 2,
-  "buildCommand": "npm install",
-  "installCommand": "npm install",
+  "buildCommand": "cd server && npm install",
+  "installCommand": "cd server && npm install",
   "framework": null,
-  "rootDirectory": "server",
+  "outputDirectory": ".",
   "functions": {
-    "server.js": {
+    "server/server.js": {
       "maxDuration": 30
     }
   },
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server.js"
+      "dest": "server/server.js"
     }
   ]
 }
