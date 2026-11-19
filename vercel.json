@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "cd server && npm install",
-  "installCommand": "cd server && npm install",
+  "buildCommand": "npm install",
+  "installCommand": "npm install",
   "framework": null,
   "functions": {
     "server/server.js": {
