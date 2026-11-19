@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm install",
+  "buildCommand": "echo 'No build needed'",
   "installCommand": "npm install",
   "framework": null,
   "functions": {
