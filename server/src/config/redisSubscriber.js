@@ -8,4 +8,11 @@ redisSubscriber.on("error",(error)=>{
     console.error("Redis subscriber error:", error.message);
 });
 
+process.on("SIGINT", async () => {
+    if (redisSubscriber.isOpen) {
+        await redisSubscriber.quit();
+    }
+    process.exit(0);
+});
+
 export default redisSubscriber;

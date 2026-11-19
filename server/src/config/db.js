@@ -1,15 +1,22 @@
 import mongoose from "mongoose";
 
+let cachedConnection = null;
+
 export const connectDB = async () => {
-    try{
+    if (cachedConnection && mongoose.connection.readyState === 1) {
+        return cachedConnection;
+    }
+
+    try {
         const databaseName = process.env.MONGODB_DB || "converge";
-        await mongoose.connect(process.env.MONGODB_URI, {
+        cachedConnection = await mongoose.connect(process.env.MONGODB_URI, {
             dbName: databaseName,
         });
         console.log(`MongoDB connected to database: ${mongoose.connection.name}`);
+        return cachedConnection;
     }
     catch(err){
         console.error("MongoDB connection error:",err.message);
-        process.exit(1);
+        throw err;
     }
 };

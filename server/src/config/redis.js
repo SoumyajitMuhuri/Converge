@@ -16,4 +16,12 @@ redisClient.on("ready", ()=>{
     console.log("Redis is ready");
 });
 
+// Graceful disconnect
+process.on("SIGINT", async () => {
+    if (redisClient.isOpen) {
+        await redisClient.quit();
+    }
+    process.exit(0);
+});
+
 export default redisClient;

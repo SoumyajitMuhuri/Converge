@@ -2,10 +2,18 @@ import { rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import redisClient from "../config/redis.js";
 
-const createRedisStore = (prefix) => new RedisStore({
-    sendCommand: (...args) => redisClient.sendCommand(args),
-    prefix,
-});
+const isServerless = process.env.VERCEL || process.env.NODE_ENV === "production";
+
+const createRedisStore = (prefix) => {
+    if (isServerless || !redisClient.isOpen) {
+        // Use memory store as fallback in serverless
+        return undefined;
+    }
+    return new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+        prefix,
+    });
+};
 
 export const createRateLimiters = () => {
 

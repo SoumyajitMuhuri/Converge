@@ -5,7 +5,6 @@ import redisClient from "./src/config/redis.js";
 import redisPublisher from "./src/config/redisPublisher.js";
 import redisSubscriber from "./src/config/redisSubscriber.js";
 import { subscribeToVisitEvents } from "./src/utils/subscribeToVisitEvents.js";
-import job from "./src/workers/cron.js";
 import { startVisitWorker } from "./src/workers/visit.worker.js";
 
 
@@ -26,7 +25,6 @@ const startServer = async () => {
 
         app.listen(PORT, () => {
             console.log(`Converge server is running`);
-            job.start();
         });
     } catch (error) {
         console.error("Failed to start server:", error.message);
@@ -34,4 +32,34 @@ const startServer = async () => {
     }
 };
 
-startServer();
+// For local development
+if (process.env.NODE_ENV !== "production") {
+    startServer();
+}
+
+// For Vercel serverless - export the app
+const app = createApp();
+
+// Initialize connections lazily for serverless
+let initialized = false;
+const initializeConnections = async () => {
+    if (!initialized) {
+        try {
+            await connectDB();
+            if (!redisClient.isOpen) await redisClient.connect();
+            if (!redisPublisher.isOpen) await redisPublisher.connect();
+            if (!redisSubscriber.isOpen) await redisSubscriber.connect();
+            initialized = true;
+        } catch (error) {
+            console.error("Failed to initialize connections:", error.message);
+        }
+    }
+};
+
+// Middleware to ensure connections are initialized
+app.use(async (req, res, next) => {
+    await initializeConnections();
+    next();
+});
+
+export default app;

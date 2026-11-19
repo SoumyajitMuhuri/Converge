@@ -6,7 +6,7 @@ import { redirectToOriginalUrl } from "./controllers/link.controller.js";
 import { createRateLimiters } from "./middleware/rateLimit.middleware.js";
 import analyticsRoutes from "./routes/analytics.routes.js"
 
-export default createApp = () => {
+export default function createApp() {
 
     const app = express();
     const { loginLimiter, registerLimiter, createLinkLimiter } = createRateLimiters();
@@ -16,14 +16,6 @@ export default createApp = () => {
     }));
 
     app.use(express.json({ limit: "10kb" }));
-
-    app.use(async (req, res, next) => {
-    try {
-        await connectDB();
-        if (!redisClient.isOpen) await redisClient.connect();
-        next();
-    } catch (err) { next(err); }
-});
 
     app.get("/api/health", (req, res) => {
         res.status(200).json({
@@ -38,4 +30,4 @@ export default createApp = () => {
     app.get("/:code", redirectToOriginalUrl);
 
     return app;
-};
+}
